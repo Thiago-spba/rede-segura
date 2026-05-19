@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master Security · Projeto de Rede Segura</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #070d16;
+  --s1:      #0c1624;
+  --s2:      #111e30;
+  --border:  #1c3049;
+  --sky:     #38bdf8;
+  --lime:    #4ade80;
+  --rose:    #fb7185;
+  --amber:   #fbbf24;
+  --txt:     #d8e8f4;
+  --soft:    #7898b2;
+  --dim:     #3d5870;
+  --white:   #ffffff;
+  --nav:     58px;
+  --hf: 'Bricolage Grotesque', sans-serif;
+  --bf: 'Plus Jakarta Sans', sans-serif;
+  --mf: 'JetBrains Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+
+body {
+  height: 100%;
+  background: var(--bg);
+  font-family: var(--bf);
+  color: var(--txt);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Progress bar ── */
+#bar {
+  position: fixed; top: 0; left: 0; height: 3px; z-index: 99;
+  background: linear-gradient(90deg, var(--sky), var(--lime));
+  box-shadow: 0 0 8px var(--sky);
+  transition: width .4s ease;
+}
+
+/* ── Stage ── */
+#stage {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── Slides ── */
+.sl {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: clamp(28px,4vh,56px) clamp(20px,5vw,72px) clamp(24px,3.5vh,48px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px,2.2vh,24px);
+  /* Grid background */
+  background:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px),
+    var(--bg);
+  background-size: 56px 56px, 56px 56px, auto;
+  /* Hidden by default */
+  opacity: 0;
+  transform: translateX(100%);
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+.sl::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--sky) 0%, var(--lime) 55%, transparent 100%);
+}
+.sl.show {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+/* ── Footer inside slide ── */
+.sf {
+  margin-top: auto;
+  padding-top: clamp(10px,1.5vh,18px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--mf);
+  font-size: clamp(9px,1vw,11px);
+  color: var(--dim);
+  flex-shrink: 0;
+}
+.sf-dot {
+  display: flex; align-items: center; gap: 7px;
+}
+.pulse {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--lime); box-shadow: 0 0 6px var(--lime);
+  animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ── Typography ── */
+.lbl {
+  font-family: var(--mf);
+  font-size: clamp(9px,1.1vw,12px);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--sky);
+}
+h2.ttl {
+  font-family: var(--hf);
+  font-size: clamp(24px,3.8vw,50px);
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.1;
+  letter-spacing: -.5px;
+}
+h2.ttl em { font-style: normal; color: var(--sky); }
+p.body {
+  font-size: clamp(14px,1.6vw,17px);
+  line-height: 1.75;
+  color: var(--txt);
+}
+
+/* ── Two-column grid ── */
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(18px,3vw,48px);
+  align-items: start;
+  flex: 1;
+}
+@media (max-width: 780px) {
+  .grid2 { grid-template-columns: 1fr; }
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: clamp(14px,2vh,20px) clamp(16px,2vw,22px);
+}
+.card.sky   { border-left: 3px solid var(--sky);   background: rgba(56,189,248,.06); }
+.card.lime  { border-left: 3px solid var(--lime);  background: rgba(74,222,128,.06); }
+.card.rose  { border-left: 3px solid var(--rose);  background: rgba(251,113,133,.06); }
+.card.amber { border-left: 3px solid var(--amber); background: rgba(251,191,36,.05); }
+
+.card-lbl {
+  font-family: var(--mf);
+  font-size: clamp(9px,1vw,11px);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  margin-bottom: 7px;
+}
+.card-lbl.s { color: var(--sky); }
+.card-lbl.l { color: var(--lime); }
+.card-lbl.r { color: var(--rose); }
+.card-lbl.a { color: var(--amber); }
+.card p { font-size: clamp(13px,1.4vw,16px); line-height: 1.7; }
+
+/* ── Analogy box ── */
+.analogy {
+  background: var(--s2);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: clamp(10px,1.6vh,15px) clamp(14px,2vw,20px);
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.analogy span { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+.analogy p {
+  font-size: clamp(12px,1.3vw,14px);
+  color: var(--soft); line-height: 1.65; font-style: italic;
+}
+.analogy strong { color: var(--txt); font-style: normal; }
+
+/* ── Lists ── */
+ul.dl { list-style: none; padding: 0; }
+ul.dl li {
+  padding: clamp(8px,1.2vh,12px) 0 clamp(8px,1.2vh,12px) 22px;
+  border-bottom: 1px solid var(--border);
+  font-size: clamp(13px,1.45vw,16px);
+  position: relative; line-height: 1.5;
+}
+ul.dl li:last-child { border-bottom: none; }
+ul.dl li::before {
+  content: '→'; position: absolute; left: 0;
+  color: var(--sky); font-family: var(--mf); font-size: 12px;
+}
+
+/* col stack helper */
+.col { display: flex; flex-direction: column; gap: clamp(12px,1.8vh,18px); }
+
+/* ── Diagram box ── */
+.dbox {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: clamp(16px,2.5vh,28px) clamp(12px,2vw,24px);
+  display: flex; flex-direction: column;
+  align-items: center; gap: clamp(10px,1.8vh,16px);
+}
+.dbox-lbl {
+  font-family: var(--mf);
+  font-size: clamp(8px,.9vw,10px);
+  letter-spacing: .15em; text-transform: uppercase;
+  align-self: flex-start;
+}
+
+/* Node */
+.nd { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.nd-icon {
+  width: clamp(44px,5.5vw,58px);
+  height: clamp(44px,5.5vw,58px);
+  border-radius: 12px; border: 2px solid;
+  display: flex; align-items: center; justify-content: center;
+  font-size: clamp(18px,2.4vw,24px);
+}
+.nd-name {
+  font-family: var(--mf);
+  font-size: clamp(9px,1vw,12px); font-weight: 500;
+  color: var(--white); text-align: center;
+}
+.nd-sub  { font-family: var(--mf); font-size: clamp(8px,.9vw,10px); text-align: center; }
+
+.nd.s .nd-icon  { background: rgba(56,189,248,.08);  border-color: var(--sky); }
+.nd.l .nd-icon  { background: rgba(74,222,128,.08);  border-color: var(--lime); }
+.nd.r .nd-icon  { background: rgba(251,113,133,.12); border-color: var(--rose); }
+.nd.a .nd-icon  { background: rgba(251,191,36,.08);  border-color: var(--amber); }
+.nd.d .nd-icon  { background: var(--s2); border-color: var(--border); }
+
+/* Flow row */
+.flow { display: flex; align-items: center; width: 100%; }
+.arr {
+  flex: 1; height: 2px; position: relative; min-width: 20px;
+  align-self: center; margin-top: -18px;
+}
+.arr::after {
+  content: '▶'; position: absolute; right: -6px; top: 50%;
+  transform: translateY(-50%); font-size: 9px;
+}
+.albl {
+  position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
+  font-family: var(--mf); font-size: clamp(8px,.85vw,10px); font-weight: 500;
+  white-space: nowrap;
+}
+.arr.r { background: var(--rose); }   .arr.r::after, .arr.r .albl { color: var(--rose); }
+.arr.s { background: var(--sky); }    .arr.s::after, .arr.s .albl { color: var(--sky); }
+.arr.l { background: var(--lime); box-shadow: 0 0 5px rgba(74,222,128,.25); }
+         .arr.l::after, .arr.l .albl { color: var(--lime); }
+.arr.a { background: var(--amber); } .arr.a::after, .arr.a .albl { color: var(--amber); }
+
+/* Vertical connector */
+.vline {
+  width: 2px; height: clamp(14px,2vh,22px); position: relative; align-self: flex-end;
+}
+.vline::after {
+  content: '▼'; position: absolute; bottom: -7px; left: 50%;
+  transform: translateX(-50%); font-size: 9px;
+}
+.vline.s { background: var(--sky); }  .vline.s::after { color: var(--sky); }
+.vline.l { background: var(--lime); } .vline.l::after { color: var(--lime); }
+
+/* VPN tunnel */
+.tunnel-wrap { flex: 1; position: relative; display: flex; align-items: center; margin-top: -18px; }
+.tunnel {
+  position: absolute; left: -4px; right: -4px; height: 40px;
+  border-radius: 20px; border: 2px dashed var(--sky);
+  background: rgba(56,189,248,.04);
+  box-shadow: 0 0 14px rgba(56,189,248,.07) inset;
+}
+.tunnel-txt {
+  position: relative; z-index: 2; text-align: center; width: 100%;
+  font-family: var(--mf); font-size: clamp(8px,.85vw,10px); color: var(--sky); font-weight: 500; line-height: 1.5;
+}
+
+/* Level pips */
+.lvl { display: flex; align-items: center; gap: 6px; }
+.pip { width: 9px; height: 9px; border-radius: 3px; }
+.p-l { background: var(--lime); box-shadow: 0 0 4px var(--lime); }
+.p-a { background: var(--amber); }
+.p-r { background: var(--rose); }
+.p-o { background: var(--border); border: 1px solid var(--dim); }
+.lvl span { font-family: var(--mf); font-size: clamp(9px,1vw,11px); margin-left: 4px; }
+
+/* ── Comparison table ── */
+.tbl { width: 100%; border-collapse: collapse; flex: 1; }
+.tbl th {
+  font-family: var(--mf); font-size: clamp(9px,1vw,11px);
+  letter-spacing: .1em; text-transform: uppercase; color: var(--dim);
+  padding: clamp(10px,1.5vh,15px) clamp(12px,1.5vw,18px);
+  text-align: left; border-bottom: 1px solid var(--border); background: var(--s1);
+}
+.tbl td {
+  padding: clamp(11px,1.6vh,16px) clamp(12px,1.5vw,18px);
+  font-size: clamp(12px,1.4vw,15px);
+  border-bottom: 1px solid rgba(28,48,73,.5);
+  vertical-align: middle;
+}
+.tbl td:first-child { color: var(--white); font-weight: 500; }
+.tbl tr:hover td { background: rgba(56,189,248,.02); }
+
+.bx {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 11px; border-radius: 20px;
+  font-family: var(--mf); font-size: clamp(9px,1vw,12px); font-weight: 500;
+}
+.bx.y { background: rgba(74,222,128,.1);  color: var(--lime);  border: 1px solid rgba(74,222,128,.2); }
+.bx.n { background: rgba(251,113,133,.1); color: var(--rose);  border: 1px solid rgba(251,113,133,.2); }
+.bx.w { background: rgba(251,191,36,.1);  color: var(--amber); border: 1px solid rgba(251,191,36,.2); }
+
+/* ── Cover (slide 1) ── */
+#s1 {
+  align-items: center; justify-content: center; text-align: center;
+}
+.cov-icon {
+  width: clamp(56px,7vw,80px); height: clamp(56px,7vw,80px);
+  border-radius: 22px;
+  background: linear-gradient(135deg, #0ea5e9, #4ade80);
+  display: flex; align-items: center; justify-content: center;
+  font-size: clamp(24px,3.5vw,38px);
+  box-shadow: 0 0 40px rgba(14,165,233,.3);
+  margin-bottom: clamp(16px,2.5vh,32px);
+}
+.cov-h1 {
+  font-family: var(--hf);
+  font-size: clamp(40px,8vw,96px);
+  font-weight: 800; color: var(--white);
+  letter-spacing: -3px; line-height: .95;
+  margin-bottom: clamp(8px,1.2vh,16px);
+}
+.cov-h1 span { color: var(--sky); }
+.cov-sub {
+  font-size: clamp(13px,1.8vw,19px);
+  color: var(--soft); font-weight: 300;
+  margin-bottom: clamp(24px,4vh,48px);
+}
+.cov-meta {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 0;
+  background: var(--s1); border: 1px solid var(--border);
+  border-radius: 13px; overflow: hidden; width: fit-content; margin: 0 auto;
+}
+.cov-item {
+  padding: clamp(12px,1.8vh,18px) clamp(20px,3.5vw,36px);
+  font-family: var(--mf); border-right: 1px solid var(--border);
+}
+.cov-item:last-child { border-right: none; }
+.cov-item b { display: block; font-family: var(--hf); font-size: clamp(12px,1.4vw,15px); color: var(--white); margin-bottom: 3px; }
+.cov-item small { font-size: clamp(9px,1vw,11px); color: var(--dim); }
+@media (max-width: 600px) {
+  .cov-meta { flex-direction: column; width: 100%; }
+  .cov-item { border-right: none; border-bottom: 1px solid var(--border); }
+  .cov-item:last-child { border-bottom: none; }
+}
+
+/* ── Quote / Recommendation slide ── */
+.ql { display: flex; flex-direction: column; justify-content: center; gap: clamp(16px,2.5vh,28px); flex: 1; }
+.bq {
+  font-family: var(--hf);
+  font-size: clamp(17px,2.4vw,30px);
+  font-weight: 600; color: var(--white);
+  line-height: 1.55;
+  border-left: 4px solid var(--sky);
+  padding-left: clamp(16px,2.5vw,28px);
+}
+.bq-who { padding-left: clamp(20px,3vw,32px); display: flex; flex-direction: column; gap: 4px; }
+.bq-who strong { font-family: var(--hf); font-size: clamp(15px,1.8vw,22px); color: var(--sky); font-weight: 700; }
+.bq-who small  { font-size: clamp(11px,1.2vw,14px); color: var(--soft); }
+
+/* ── Nav bar ── */
+#nav {
+  height: var(--nav); flex-shrink: 0;
+  background: var(--s1); border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  gap: clamp(10px,2vw,24px); z-index: 10;
+}
+.nb {
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--s2);
+  color: var(--soft); cursor: pointer; font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+.nb:hover:not(:disabled) { border-color: var(--sky); color: var(--sky); box-shadow: 0 0 10px rgba(56,189,248,.18); }
+.nb:disabled { opacity: .25; cursor: not-allowed; }
+#ctr { font-family: var(--mf); font-size: 12px; color: var(--dim); min-width: 44px; text-align: center; }
+.dots { display: flex; align-items: center; gap: 5px; }
+.dots span {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--border); cursor: pointer; transition: all .22s;
+}
+.dots span.on { width: 18px; border-radius: 3px; background: var(--sky); box-shadow: 0 0 7px rgba(56,189,248,.35); }
+
+/* ── kbd hint (desktop only) ── */
+#hint {
+  position: fixed; bottom: calc(var(--nav) + 10px); right: 18px;
+  font-family: var(--mf); font-size: 10px; color: var(--dim); opacity: .55;
+}
+kbd { background: var(--s2); border: 1px solid var(--border); border-radius: 3px; padding: 1px 6px; }
+@media (hover:none),(max-width:780px) { #hint { display: none; } }
+</style>
+</head>
+<body>
+
+<div id="bar" style="width:12.5%"></div>
+
+<div id="stage">
+
+<!-- ═══════ SLIDE 1 — CAPA ═══════ -->
+<section class="sl show" id="s1">
+  <div class="cov-icon">🔐</div>
+  <h1 class="cov-h1">Rede <span>Segura</span></h1>
+  <p class="cov-sub">Análise de Fluxos, Proxy e Conexões VPN</p>
+  <div class="cov-meta">
+    <div class="cov-item"><b>Thiago F. A. A. dos Santos</b><small>Engenheiro Responsável</small></div>
+    <div class="cov-item"><b>Master Security</b><small>Consultoria em Segurança de Redes</small></div>
+  </div>
+  <div class="sf" style="margin-top: clamp(20px,3vh,40px);">
+    <div class="sf-dot"><span class="pulse"></span>MASTER SECURITY CONSULTING</div>
+    <span>ANÁLISE DE REDES</span>
+  </div>
+</section>
+
+<!-- ═══════ SLIDE 2 — INTRODUÇÃO ═══════ -->
+<section class="sl" id="s2">
+  <div class="lbl">01 · Contexto</div>
+  <h2 class="ttl">Introdução e <em>Cenário Operacional</em></h2>
+  <div class="grid2">
+    <div class="col">
+      <p class="body">Esta consultoria foi desenvolvida pela <strong style="color:var(--white)">Master Security</strong> para mapear três abordagens de infraestrutura de rede e definir qual oferece maior proteção para os dados e a identidade da empresa.</p>
+      <div class="card sky">
+        <div class="card-lbl s">// Problema Central</div>
+        <p>Toda conexão expõe dois dados críticos: <strong>quem está acessando</strong> (endereço IP) e <strong>o que está acessando</strong> (conteúdo dos dados). Este projeto avalia quais tecnologias protegem essas informações.</p>
+      </div>
+      <div class="analogy">
+        <span>💡</span>
+        <p><strong>Pense assim:</strong> seu IP é o endereço da empresa no mundo digital — sem proteção, qualquer um sabe de onde você veio e o que você fez.</p>
+      </div>
+    </div>
+    <div class="col">
+      <p style="font-family:var(--mf);font-size:clamp(9px,1vw,11px);text-transform:uppercase;letter-spacing:.12em;color:var(--dim);">Tecnologias Avaliadas</p>
+      <ul class="dl">
+        <li><strong>Fluxo Regular</strong> — Conexão direta sem intermediários</li>
+        <li><strong>Servidor Proxy</strong> — Intermediário que representa o usuário</li>
+        <li><strong>VPN</strong> — Túnel criptografado ponta a ponta</li>
+      </ul>
+      <div class="card">
+        <div class="card-lbl s">// Critérios de Análise</div>
+        <ul class="dl" style="margin-top:6px;">
+          <li>Ocultação do IP de origem</li>
+          <li>Rastreamento pelo provedor (ISP)</li>
+          <li>Criptografia dos dados transmitidos</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="sf">
+    <div class="sf-dot"><span class="pulse"></span>MASTER SECURITY CONSULTING</div>
+    <span>ANÁLISE DE REDES</span>
+  </div>
+</section>
+
+<!-- ═══════ SLIDE 3 — FLUXO REGULAR ═══════ -->
+<section class="sl" id="s3">
+  <div class="lbl">02A · Análise Técnica</div>
+  <h2 class="ttl">Fluxo de Dados <em>Regular</em> — Conexão Direta</h2>
+  <div class="grid2">
+    <div class="col">
+      <p class="body">Na conexão direta o computador se comunica diretamente com o servidor destino, sem nenhuma camada de proteção entre eles. É a forma mais simples — e mais vulnerável — de se conectar.</p>
+      <div class="card lime">
+        <div class="card-lbl l">// Vantagem</div>
+        <p>Velocidade máxima: sem overhead de criptografia ou roteamento intermediário no caminho.</p>
+      </div>
+      <div class="card rose">
+        <div class="card-lbl r">// Desvantagem Crítica</div>
+        <p>Exposição total: o IP real da empresa fica visível para todos. O provedor (ISP) rastreia e registra cada acesso realizado.</p>
+      </div>
+      <div class="analogy">
+        <span>💡</span>
+        <p><strong>Analogia:</strong> como enviar uma carta sem envelope — o carteiro lê tudo e o destinatário sabe seu endereço exato.</p>
+      </div>
+    </div>
+    <div class="dbox">
+      <p class="dbox-lbl" style="color:var(--rose);">⚠ Sem criptografia — tudo exposto</p>
+      <div class="flow">
+        <div class="nd d">
+          <div class="nd-icon">💻</div>
+          <span class="nd-name">Usuário</span>
+          <span class="nd-sub" style="color:var(--rose);">IP Exposto</span>
+        </div>
+        <div class="arr r"><span class="albl">Dados Abertos</span></div>
+        <div class="nd r">
+          <div class="nd-icon">🏢</div>
+          <span class="nd-name">ISP</span>
+          <span class="nd-sub" style="color:var(--rose);">Rastreia</span>
+        </div>
+        <div class="arr r"><span class="albl">Dados Abertos</span></div>
+        <div class="nd d">
+          <div class="nd-icon">🌐</div>
+          <span class="nd-name">Destino</span>
+          <span class="nd-sub" style="color:var(--amber);">Vê IP Real</span>
+        </div>
+      </div>
+      <div style="width:100%;height:1px;background:var(--border);"></div>
+      <div class="lvl">
+        <div class="pip p-r"></div><div class="pip p-o"></div><div class="pip p-o"></div>
+        <span style="color:var(--rose);">Proteção Baixa</span>
+      </div>
+    </div>
+  </div>
+  <div class="sf">
+    <div class="sf-dot"><span class="pulse"></span>MASTER SECURITY CONSULTING</div>
+    <span>ANÁLISE DE REDES</span>
+  </div>
+</section>
+
+<!-- ═══════ SLIDE 4 — PROXY ═══════ -->
+<section class="sl" id="s4">
+  <div class="lbl">02B · Análise Técnica</div>
+  <h2 class="ttl">Fluxo de Dados via <em>Proxy</em></h2>
+  <div class="grid2">
+    <div class="col">
+      <p class="body">O Proxy age como um <strong style="color:var(--white)">representante</strong>: o cliente faz o pedido ao Proxy, e o Proxy busca o recurso em seu próprio nome. O destino nunca conhece a identidade real do usuário.</p>
+      <div class="card lime">
+        <div class="card-lbl l">// Vantagem</div>
+        <p>Oculta o IP original do servidor destino. O site acessado vê apenas o IP do servidor Proxy.</p>
+      </div>
+      <div class="card rose">
+        <div class="card-lbl r">// Desvantagem Crítica</div>
+        <p>O ISP <strong>ainda enxerga tudo</strong>. Sem túnel seguro entre usuário e Proxy, os dados trafegam abertos e podem ser interceptados.</p>
+      </div>
+      <div class="analogy">
+        <span>💡</span>
+        <p><strong>Analogia:</strong> como pedir a um garçom que faça o pedido — o chef não sabe quem pediu, mas o garçom (e todos no salão) viram tudo.</p>
+      </div>
+    </div>
+    <div class="dbox">
+      <p class="dbox-lbl" style="color:var(--amber);">⚠ IP mascarado · sem criptografia</p>
+      <div class="flow">
+        <div class="nd d">
+          <div class="nd-icon">💻</div>
+          <span class="nd-name">Usuário</span>
+        </div>
+        <div class="arr r"><span class="albl">Sem Cripto.</span></div>
+        <div class="nd r">
+          <div class="nd-icon">🏢</div>
+          <span class="nd-name">ISP</span>
+          <span class="nd-sub" style="color:var(--rose);">Rastreia</span>
+        </div>
+        <div class="arr r"><span class="albl">Sem Cripto.</span></div>
+        <div class="nd a">
+          <div class="nd-icon">🛡️</div>
+          <span class="nd-name">Proxy</span>
+          <span class="nd-sub" style="color:var(--amber);">Oculta IP</span>
+        </div>
+      </div>
+      <div style="width:100%;display:flex;justify-content:flex-end;padding-right:24px;">
+        <div class="vline s"></div>
+      </div>
+      <div style="width:100%;display:flex;justify-content:flex-end;">
+        <div class="nd l">
+          <div class="nd-icon">🌐</div>
+          <span class="nd-name">Destino</span>
+          <span class="nd-sub" style="color:var(--lime);">Vê IP Proxy</span>
+        </div>
+      </div>
+      <div style="width:100%;height:1px;background:var(--border);"></div>
+      <div class="lvl">
+        <div class="pip p-a"></div><div class="pip p-a"></div><div class="pip p-o"></div>
+        <span style="color:var(--amber);">Proteção Média</span>
+      </div>
+    </div>
+  </div>
+  <div class="sf">
+    <div class="sf-dot"><span class="pulse"></span>MASTER SECURITY CONSULTING</div>
+    <span>ANÁLISE DE REDES</span>
+  </div>
+</section>
+
+<!-- ═══════ SLIDE 5 — VPN ═══════ -->
+<section class="sl" id="s5">
+  <div class="lbl">02C · Análise Técnica</div>
+  <h2 class="ttl">Fluxo de Dados via <em>VPN</em></h2>
+  <div class="grid2">
+    <div class="col">
+      <p class="body">A VPN cria um <strong style="color:var(--white)">túnel criptografado de ponta a ponta</strong>. Todo o tráfego fica encapsulado em camadas de cifragem — o ISP só enxerga blocos de dados completamente ilegíveis.</p>
+      <div class="card lime">
+        <div class="card-lbl l">// Vantagem</div>
+        <p>Segurança total: IP real oculto <em>e</em> ISP completamente cego ao conteúdo. Criptografia AES-256 impede qualquer interceptação.</p>
+      </div>
+      <div class="card amber">
+        <div class="card-lbl a">// Desvantagem Menor</div>
+        <p>Leve redução de velocidade pelo tempo necessário para criptografar e descriptografar cada pacote — imperceptível em redes modernas.</p>
+      </div>
+      <div class="analogy">
+        <span>💡</span>
+        <p><strong>Analogia:</strong> como usar um cofre portátil — mesmo interceptado, ninguém consegue abrir nem saber o que há dentro.</p>
+      </div>
+    </div>
+    <div class="dbox">
+      <p class="dbox-lbl" style="color:var(--lime);">✔ Túnel cifrado ponta a ponta</p>
+      <div class="flow">
+        <div class="nd s">
+          <div class="nd-icon">💻</div>
+          <span class="nd-name">Usuário</span>
+        </div>
+        <div class="tunnel-wrap">
+          <div class="tunnel"></div>
+          <div class="tunnel-txt">🔒 Criptografado<br><span style="color:var(--dim);font-size:.9em;">ISP: dados ilegíveis</span></div>
+        </div>
+        <div class="nd d">
+          <div class="nd-icon">🏢</div>
+          <span class="nd-name">ISP</span>
+          <span class="nd-sub" style="color:var(--lime);">Cego 🚫</span>
+        </div>
+      </div>
+      <div style="width:100%;display:flex;justify-content:flex-end;padding-right:24px;">
+        <div class="vline l"></div>
+      </div>
+      <div class="flow" style="justify-content:flex-end;">
+        <div class="nd s">
+          <div class="nd-icon">🔒</div>
+          <span class="nd-name">Servidor VPN</span>
+          <span class="nd-sub" style="color:var(--sky);">Descriptografa</span>
+        </div>
+        <div class="arr l"><span class="albl">IP do VPN</span></div>
+        <div class="nd l">
+          <div class="nd-icon">🌐</div>
+          <span class="nd-name">Destino</span>
+          <span class="nd-sub" style="color:var(--lime);">Vê IP VPN</span>
+        </div>
+      </div>
+      <div style="width:100%;height:1px;background:var(--border);"></div>
+      <div class="lvl">
+        <div class="pip p-l"></div><div class="pip p-l"></div><div class="pip p-l"></div>
+        <span style="color:var(--lime);">Proteção Alta</span>
+      </div>
+    </div>
+  </div>
+  <div class="sf">
+    <div class="sf-dot"><span class="pulse"></span>MASTER SECURITY CONSULTING</div>
+    <span>ANÁLISE DE REDES</span>
+  </div>
+</section>
+
+<!-- ═══════ SLIDE 6 — TABELA ═══════ -->
+<section class="sl" id="s6">
+  <div class="lbl">03 · Comparativo</div>
+  <h2 class="ttl">Matriz de <em>Funcionalidades</em></h2>
+  <div style="flex:1;overflow-x:auto;">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th style="width:38%;">Critério</th>
+          <th>Fluxo Regular</th>
+          <th>Proxy</th>
+          <th>VPN</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Oculta o IP do usuário?</td>
+          <td><span class="bx n">✗ Não</span></td>
+          <td><span class="bx y">✓ Sim</span></td>
+          <td><span class="bx y">✓ Sim</span></td>
+        </tr>
+        <tr>
+          <td>Impede rastreamento do ISP?</td>
+          <td><span class="bx n">✗ Não</span></td>
+          <td><span class="bx n">✗ Não</span></td>
+          <td><span class="bx y">✓ Sim</span></td>
+        </tr>
+        <tr>
+          <td>Criptografia dos dados?</td>
+          <td><span class="bx n">✗ Não</span></td>
+          <td><span class="bx w">~ Geralmente não</span></td>
+          <td><span class="bx y">✓ AES-256</span></td>
+        </tr>
+        <tr>
+          <td>Nível de proteção</td>
+          <td><div class="lvl"><div class="pip p-r"></div><div class="pip p-o"></div><div class="pip p-o"></div><span style="color:var(--rose);">Baixo</span></div></td>
+          <td><div class="lvl"><div class="pip p-a"></div><div class="pip p-a"></div><div class="pip p-o"></div><span style="color:var(--amber);">Médio</span></div></td>
+          <td><div class="lvl"><div class="pip p-l"></div><div class="pip p-l"></div><div class="pip p-l"></div><span style="color:var(--lime);">Alto</span></div></td>
+        </tr>
+        <tr>
+          <td>Impacto na velocidade</td>
+          <td><span class="bx y">Nenhum</span></td>
+          <td><span class="bx w">Pouco</span></td>
+          <td><span class="bx w">Leve</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="sf">
+    <div class="sf-dot"><span class="pulse"></span>MASTER SECURITY CONSULTING</div>
+    <span>ANÁLISE DE REDES</span>
+  </div>
+</section>
+
+<!-- ═══════ SLIDE 7 — CHAINING ═══════ -->
+<section class="sl" id="s7">
+  <div class="lbl">04 · Uso Combinado</div>
+  <h2 class="ttl">VPN + Proxy — <em>Encadeamento</em></h2>
+  <div class="grid2">
+    <div class="col">
+      <p class="body">É <strong style="color:var(--white)">tecnicamente possível</strong> usar VPN e Proxy na mesma topologia. Essa prática é chamada de encadeamento (<em>chaining</em>): o tráfego passa pelo túnel VPN e depois pelo Proxy antes de chegar à internet.</p>
+      <div class="card" style="padding:16px 18px;">
+        <p style="font-family:var(--mf);font-size:11px;color:var(--dim);margin-bottom:8px;letter-spacing:.1em;text-transform:uppercase;">Fluxo do Encadeamento</p>
+        <div style="display:flex;align-items:center;gap:0;flex-wrap:nowrap;overflow-x:auto;padding:4px 0;">
+          <span style="font-size:20px;flex-shrink:0;">💻</span>
+          <span style="font-family:var(--mf);font-size:10px;color:var(--sky);padding:0 6px;flex-shrink:0;">→VPN🔒→</span>
+          <span style="font-size:20px;flex-shrink:0;">🔒</span>
+          <span style="font-family:var(--mf);font-size:10px;color:var(--amber);padding:0 6px;flex-shrink:0;">→Proxy→</span>
+          <span style="font-size:20px;flex-shrink:0;">🛡️</span>
+          <span style="font-family:var(--mf);font-size:10px;color:var(--lime);padding:0 6px;flex-shrink:0;">→Internet→</span>
+          <span style="font-size:20px;flex-shrink:0;">🌐</span>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card rose">
+        <div class="card-lbl r">// Gargalo de Desempenho</div>
+        <p>O duplo roteamento gera latência elevada e <em>jitter</em> (instabilidade), tornando a rede lenta para operações cotidianas.</p>
+      </div>
+      <div class="card sky">
+        <div class="card-lbl s">// Redundância Técnica</div>
+        <p>A VPN já resolve completamente o mascaramento de IP e a criptografia. O Proxy não acrescenta nenhum ganho de segurança — apenas problemas.</p>
+      </div>
+      <div class="card amber">
+        <div class="card-lbl a">// Veredicto</div>
+        <p><strong style="color:var(--amber);">Não recomendado.</strong> Complexidade máxima para benefício zero adicional.</p>
+      </div>
+    </div>
+  </div>
+  <div class="sf">
+    <div class="sf-dot"><span class="pulse"></span>MASTER SECURITY CONSULTING</div>
+    <span>ANÁLISE DE REDES</span>
+  </div>
+</section>
+
+<!-- ═══════ SLIDE 8 — RECOMENDAÇÃO ═══════ -->
+<section class="sl" id="s8">
+  <div class="lbl">05 · Recomendação Estratégica</div>
+  <h2 class="ttl">Análise Final da <em>Consultoria</em></h2>
+  <div class="grid2">
+    <div class="ql">
+      <blockquote class="bq">
+        "O sistema baseado em VPN é indiscutivelmente o mais completo. Enquanto o Proxy apenas <em>maqueia</em> a origem dos acessos — deixando os dados abertos para o provedor —, a VPN entrega uma solução sistêmica: um cofre blindado que garante privacidade, anonimato e proteção real contra qualquer interceptação."
+      </blockquote>
+      <div class="bq-who">
+        <strong>Thiago F. A. A. dos Santos</strong>
+        <small>Engenheiro Responsável · Master Security Consulting</small>
+      </div>
+    </div>
+    <div class="col" style="justify-content:center;gap:clamp(12px,2vh,18px);">
+      <div class="card" style="text-align:center;background:rgba(74,222,128,.06);border-color:var(--lime);padding:clamp(18px,3vh,32px) 20px;">
+        <div style="font-size:clamp(36px,5vw,56px);margin-bottom:8px;">🔒</div>
+        <div style="font-family:var(--hf);font-size:clamp(22px,3.5vw,38px);font-weight:800;color:var(--lime);letter-spacing:-1px;">VPN</div>
+        <div style="font-family:var(--mf);font-size:clamp(9px,1vw,11px);color:var(--dim);margin-top:5px;letter-spacing:.14em;">SOLUÇÃO RECOMENDADA</div>
+      </div>
+      <div class="card">
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:clamp(8px,1.3vh,12px);">
+          <li style="display:flex;align-items:center;gap:9px;font-size:clamp(12px,1.4vw,15px);"><span style="color:var(--lime);font-size:14px;">✓</span>Privacidade completa</li>
+          <li style="display:flex;align-items:center;gap:9px;font-size:clamp(12px,1.4vw,15px);"><span style="color:var(--lime);font-size:14px;">✓</span>ISP cego ao conteúdo</li>
+          <li style="display:flex;align-items:center;gap:9px;font-size:clamp(12px,1.4vw,15px);"><span style="color:var(--lime);font-size:14px;">✓</span>Criptografia AES-256</li>
+          <li style="display:flex;align-items:center;gap:9px;font-size:clamp(12px,1.4vw,15px);"><span style="color:var(--lime);font-size:14px;">✓</span>Dados sensíveis protegidos</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="sf">
+    <div class="sf-dot"><span class="pulse"></span>MASTER SECURITY CONSULTING</div>
+    <span>ANÁLISE DE REDES</span>
+  </div>
+</section>
+
+</div><!-- /stage -->
+
+<!-- ═══════ NAV ═══════ -->
+<div id="nav">
+  <button class="nb" id="bp" disabled>◀</button>
+  <div class="dots" id="dt"></div>
+  <span id="ctr">1 / 8</span>
+  <button class="nb" id="bn">▶</button>
+</div>
+<div id="hint"><kbd>←</kbd> <kbd>→</kbd> navegar · <kbd>F</kbd> tela cheia</div>
+
+<script>
+(function(){
+  const N = 8;
+  let c = 1, busy = false;
+  const sl = n => document.getElementById('s'+n);
+  const dt = document.getElementById('dt');
+  const bp = document.getElementById('bp');
+  const bn = document.getElementById('bn');
+
+  // Build dots
+  for(let i=1;i<=N;i++){
+    const d=document.createElement('span');
+    d.onclick=()=>go(i);
+    dt.appendChild(d);
+  }
+
+  function ui(){
+    document.getElementById('ctr').textContent=c+' / '+N;
+    document.getElementById('bar').style.width=((c/N)*100)+'%';
+    bp.disabled=c===1; bn.disabled=c===N;
+    dt.querySelectorAll('span').forEach((d,i)=>d.classList.toggle('on',i+1===c));
+  }
+
+  function go(n){
+    if(busy||n===c||n<1||n>N)return;
+    busy=true;
+    const from=sl(c), to=sl(n), dir=n>c?1:-1;
+    const T='transform .4s cubic-bezier(.22,1,.36,1), opacity .38s ease';
+
+    // Set destination off-screen (no transition)
+    to.style.transition='none';
+    to.style.transform='translateX('+(dir*100)+'%)';
+    to.style.opacity='0';
+    to.offsetHeight; // force reflow
+
+    // Animate both
+    from.style.transition=T;
+    to.style.transition=T;
+    from.style.transform='translateX('+(dir*-100)+'%)';
+    from.style.opacity='0';
+    from.style.pointerEvents='none';
+    to.style.transform='translateX(0)';
+    to.style.opacity='1';
+    to.style.pointerEvents='auto';
+
+    // Scroll new slide to top
+    to.scrollTop=0;
+
+    c=n; ui();
+    setTimeout(()=>{
+      from.style.transition='none';
+      from.style.transform='translateX(100%)';
+      from.style.opacity='0';
+      busy=false;
+    },420);
+  }
+
+  // Init: hide all except slide 1
+  for(let i=2;i<=N;i++){
+    const s=sl(i);
+    s.style.transform='translateX(100%)';
+    s.style.opacity='0';
+    s.style.pointerEvents='none';
+  }
+  sl(1).style.transform='translateX(0)';
+  sl(1).style.opacity='1';
+  sl(1).style.pointerEvents='auto';
+
+  bp.onclick=()=>go(c-1);
+  bn.onclick=()=>go(c+1);
+
+  // Keyboard
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();go(c+1);}
+    if(e.key==='ArrowLeft'){e.preventDefault();go(c-1);}
+    if(e.key==='f'||e.key==='F'){
+      document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
+    }
+  });
+
+  // Touch swipe
+  let tx=0;
+  document.getElementById('stage').addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
+  document.getElementById('stage').addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-tx;
+    if(Math.abs(dx)>40)go(dx<0?c+1:c-1);
+  },{passive:true});
+
+  ui();
+})();
+</script>
+</body>
+</html>
